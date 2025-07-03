@@ -43,7 +43,10 @@ def get_obsidian_tasks(notes_dir):
                                     formatted_task = formatted_task.replace(date_match.group(0), '').strip()
                                 
                                 # Escape Conky special characters like $
-                                formatted_task = formatted_task.replace('$', '\\$')
+                                formatted_task = formatted_task.replace('$', '${char 36}')
+
+                                # Debugging output
+                                print(f"DEBUG: Task: {task_text}, Date Match: {date_match}, Task Date: {task_date}, Formatted: {formatted_task}", file=sys.stderr)
 
                                 if task_date:
                                     if task_date < today:
