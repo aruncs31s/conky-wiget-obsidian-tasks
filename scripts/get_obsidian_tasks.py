@@ -3,48 +3,65 @@
 import os
 import re
 import sys
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
+
+total_nots = 0
+total_folders = 0
+
 
 def get_obsidian_tasks(notes_dir):
+    global total_nots
+    global total_folders
     today = date.today()
-    start_of_week = today - timedelta(days=today.weekday()) # Monday as start of week
+    start_of_week = today - timedelta(days=today.weekday())  # Monday as start of week
     end_of_week = start_of_week + timedelta(days=6)
     start_of_month = today.replace(day=1)
     # Calculate end of month: go to next month, then subtract one day
-    end_of_month = (today.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+    end_of_month = (today.replace(day=28) + timedelta(days=4)).replace(
+        day=1
+    ) - timedelta(days=1)
 
     overdue_tasks = []
     today_tasks = []
-    coming_tasks = [] # Tasks this week, but not today
-    this_month_tasks = [] # Tasks this month, but not today, overdue, or coming this week
+    coming_tasks = []  # Tasks this week, but not today
+    this_month_tasks = (
+        []
+    )  # Tasks this month, but not today, overdue, or coming this week
 
     for root, _, files in os.walk(notes_dir):
         for file in files:
             if file.endswith(".md"):
+                total_nots += 1
                 file_path = os.path.join(root, file)
                 try:
                     with open(file_path, "r", encoding="utf-8") as f:
                         for line in f:
                             if line.strip().startswith("- [ ]"):
                                 task_text = line.strip().replace("- [ ] ", "")
-                                
+
                                 # Extract date from task (e.g., 2025-07-04)
-                                date_match = re.search(r'\d{4}-\d{2}-\d{2}', task_text)
+                                date_match = re.search(r"\d{4}-\d{2}-\d{2}", task_text)
                                 task_date = None
                                 if date_match:
                                     try:
-                                        task_date = datetime.strptime(date_match.group(0), '%Y-%m-%d').date()
+                                        task_date = datetime.strptime(
+                                            date_match.group(0), "%Y-%m-%d"
+                                        ).date()
                                     except ValueError:
-                                        pass # Invalid date format, ignore
+                                        pass  # Invalid date format, ignore
 
                                 # Remove links and dates from the displayed task text
-                                formatted_task = re.sub(r'https?://\S+', '', task_text)
-                                formatted_task = re.sub(r'\[.*\]\(.*\)', '', formatted_task) # Remove Obsidian links
+                                formatted_task = re.sub(r"https?://\S+", "", task_text)
+                                formatted_task = re.sub(
+                                    r"\[.*\]\(.*\)", "", formatted_task
+                                )  # Remove Obsidian links
                                 if date_match:
-                                    formatted_task = formatted_task.replace(date_match.group(0), '').strip()
-                                
+                                    formatted_task = formatted_task.replace(
+                                        date_match.group(0), ""
+                                    ).strip()
+
                                 # Escape Conky special characters like $
-                                formatted_task = formatted_task.replace('$', '\\$')
+                                formatted_task = formatted_task.replace("$", "\\$")
 
                                 if task_date:
                                     if task_date < today:
@@ -71,50 +88,58 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         notes_folder = sys.argv[1]
 
-    overdue_tasks, today_tasks, coming_tasks, this_month_tasks = get_obsidian_tasks(notes_folder)
+    overdue_tasks, today_tasks, coming_tasks, this_month_tasks = get_obsidian_tasks(
+        notes_folder
+    )
 
+    # Print Vault Stats
+    print("${color1}${alignc}O B S I D I A N   T A S K S${color}")
+    print("${hr}")
+    print(f"Total Notes: {total_nots}")
     # Overdue Tasks
     if overdue_tasks:
-        print("O V E R D U E   T A S K S")
-        print("---------------------")
+        print("${color1}${alignc}O V E R D U E   T A S K S${color}")
+        print("${hr}")
         for task in overdue_tasks[:5]:  # Limit to 5 tasks
             print(f"• {task}")
     else:
         print("N O   O V E R D U E   T A S K S")
-        print("---------------------")
+        print("${hr}")
 
     print("\n")  # Add a newline for separation
 
     # Today's Tasks
     if today_tasks:
-        print("T O D A Y ' S   T A S K S")
-        print("---------------------")
+        print("${color1}${alignc}T O D A Y ' S   T A S K S${color}")
+        print("${hr}")
         for task in today_tasks[:5]:  # Limit to 5 tasks
             print(f"• {task}")
     else:
-        print("N O   T O D A Y ' S   T A S K S")
-        print("---------------------")
+        print("${color1}${alignc}N O   T O D A Y ' S   T A S K S${color}")
+        print("${hr}")
 
     print("\n")  # Add a newline for separation
 
     # Coming Tasks (this week)
     if coming_tasks:
-        print("C O M I N G   T A S K S")
-        print("---------------------")
+        print("${color1}${alignc}C O M I N G   T A S K S${color}")
+        print("${hr}")
         for task in coming_tasks[:5]:  # Limit to 5 tasks
             print(f"• {task}")
     else:
-        print("N O   C O M I N G   T A S K S")
-        print("---------------------")
+        print("${color1}${alignc}N O   C O M I N G   T A S K S{color}")
+        print("${hr}")
 
     print("\n")  # Add a newline for separation
 
     # This Month's Tasks
     if this_month_tasks:
-        print("T H I S   M O N T H ' S   T A S K S")
+        print("${color1}${alignc}T H I S   M O N T H ' S   T A S K S${color}")
+        # print("T H I S   M O N T H ' S   T A S K S")
         print("---------------------")
         for task in this_month_tasks[:5]:  # Limit to 5 tasks
             print(f"• {task}")
     else:
-        print("N O   T H I S   M O N T H ' S   T A S K S")
-        print("---------------------")
+
+        print("${color1}${alignc}NO T A S K S    T H I S    M O N T H S${color}")
+        # print("${hr}")
