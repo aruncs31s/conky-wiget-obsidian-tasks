@@ -139,6 +139,6 @@ conky.config = {
 };
 
 conky.text = [[
-${execp ~/.config/conky/scripts/get_obsidian_tasks.py ~/Notes}
+${color1}${alignc}${execp ~/.config/conky/scripts/get_obsidian_tasks.py ~/Notes}${color}
 
 ]];
