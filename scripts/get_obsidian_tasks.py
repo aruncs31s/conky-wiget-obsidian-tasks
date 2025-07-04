@@ -3,20 +3,25 @@
 import os
 import re
 import sys
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
+
 
 def get_obsidian_tasks(notes_dir):
     today = date.today()
-    start_of_week = today - timedelta(days=today.weekday()) # Monday as start of week
+    start_of_week = today - timedelta(days=today.weekday())  # Monday as start of week
     end_of_week = start_of_week + timedelta(days=6)
     start_of_month = today.replace(day=1)
     # Calculate end of month: go to next month, then subtract one day
-    end_of_month = (today.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+    end_of_month = (today.replace(day=28) + timedelta(days=4)).replace(
+        day=1
+    ) - timedelta(days=1)
 
     overdue_tasks = []
     today_tasks = []
-    coming_tasks = [] # Tasks this week, but not today
-    this_month_tasks = [] # Tasks this month, but not today, overdue, or coming this week
+    coming_tasks = []  # Tasks this week, but not today
+    this_month_tasks = (
+        []
+    )  # Tasks this month, but not today, overdue, or coming this week
 
     for root, _, files in os.walk(notes_dir):
         for file in files:
@@ -27,23 +32,35 @@ def get_obsidian_tasks(notes_dir):
                         for line in f:
                             if line.strip().startswith("- [ ]"):
                                 task_text = line.strip().replace("- [ ] ", "")
-                                
+
                                 # Extract date from task (e.g., 2025-07-04)
-                                date_match = re.search(r'\d{4}-\d{2}-\d{2}', task_text)
+                                date_match = re.search(r"\d{4}-\d{2}-\d{2}", task_text)
                                 task_date = None
                                 if date_match:
                                     try:
-                                        task_date = datetime.strptime(date_match.group(0), '%Y-%m-%d').date()
+                                        task_date = datetime.strptime(
+                                            date_match.group(0), "%Y-%m-%d"
+                                        ).date()
                                     except ValueError:
-                                        pass # Invalid date format, ignore
+                                        pass  # Invalid date format, ignore
 
-                                # Remove links and dates from the displayed task text
-                                formatted_task = re.sub(r'https?://\S+', '', task_text)
+                                # Remove links from the displayed task text first
+                                formatted_task = re.sub(r"https?://\S+", "", task_text)
+                                formatted_task = re.sub(
+                                    r"\[.*\]\(.*?\)", "", formatted_task
+                                )  # Remove Obsidian links
+
                                 if date_match:
-                                    formatted_task = formatted_task.replace(date_match.group(0), '').strip()
-                                
+                                    # Remove date from the formatted task text
+                                    formatted_task = formatted_task.replace(
+                                        date_match.group(0), ""
+                                    ).strip()
+
                                 # Escape Conky special characters like $
-                                formatted_task = formatted_task.replace('$', '\$')
+                                formatted_task = formatted_task.replace("$", "\\$")
+
+                                # Debugging output
+                                # print(f"DEBUG: Task: {task_text}, Date Match: {date_match}, Task Date: {task_date}, Formatted: {formatted_task}", file=sys.stderr)
 
                                 if task_date:
                                     if task_date < today:
@@ -54,11 +71,7 @@ def get_obsidian_tasks(notes_dir):
                                         coming_tasks.append(formatted_task)
                                     elif start_of_month <= task_date <= end_of_month:
                                         this_month_tasks.append(formatted_task)
-                                else:
-                                    # If no date is found, categorize as 'coming' if it's a general task
-                                    # or you can choose to ignore it or put it in a 'misc' category
-                                    # For now, I'll put it in 'coming' if no date is specified.
-                                    coming_tasks.append(formatted_task)
+                                # Tasks without dates are ignored for now
 
                 except Exception as e:
                     print(f"ERROR: Reading {file_path}: {e}", file=sys.stderr)
@@ -74,7 +87,9 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         notes_folder = sys.argv[1]
 
-    overdue_tasks, today_tasks, coming_tasks, this_month_tasks = get_obsidian_tasks(notes_folder)
+    overdue_tasks, today_tasks, coming_tasks, this_month_tasks = get_obsidian_tasks(
+        notes_folder
+    )
 
     # Overdue Tasks
     if overdue_tasks:
@@ -119,5 +134,7 @@ if __name__ == "__main__":
         for task in this_month_tasks[:5]:  # Limit to 5 tasks
             print(f"${{color1}}• ${{color2}}{task}${{color}}")
     else:
-        print("${{color1}}${{alignc}}N O   T H I S   M O N T H ' S   T A S K S${{color}}")
+        print(
+            "${{color1}}${{alignc}}N O   T H I S   M O N T H ' S   T A S K S${{color}}"
+        )
         print("${{color1}}${{hr}}${{color}}")
