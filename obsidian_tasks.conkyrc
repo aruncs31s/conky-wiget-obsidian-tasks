@@ -24,7 +24,7 @@ conky.config = {
 
 	--Placement
 
-	alignment = 'bottom_right',		            -- top_left,top_middle,top_right,bottom_left,bottom_middle,bottom_right,
+	alignment = 'top_right',		            -- top_left,top_middle,top_right,bottom_left,bottom_middle,bottom_right,
 												-- middle_left,middle_middle,middle_right,none
 	--Arch Duoscreen
 	--gap_x = -1910,
@@ -58,7 +58,7 @@ conky.config = {
 
 	extra_newline = false,						-- extra newline at the end - for asesome's wiboxes
 	format_human_readable = true,				-- KiB, MiB rather then number of bytes
-	font = 'CaskaydiaCoveNerd:bold:size=13',  			-- font for complete conky unless in code defined
+	font = 'CaskaydiaCove Nerd Font:bold:size=13',  			-- font for complete conky unless in code defined
 	max_text_width = 0,							-- 0 will make sure line does not get broken if width too smal
 	max_user_text = 16384,						-- max text in conky default 16384
 	override_utf8_locale = true,				-- force UTF8 requires xft
@@ -89,11 +89,13 @@ conky.config = {
 	default_color = '#cad3f5',  				-- default color and border color (Text)
 	color0 = '#cdd6f4',  						-- Text
 	color1 = '#89dceb',
+	color2 = '#fe640b',
+	color3 = '#179299'
 	--Lua
 
 };
 
 conky.text = [[
-${color1}${alignc}${execp ~/.config/conky/scripts/get_obsidian_tasks.py ~/Notes}${color}
+${color1}${alignc}${execp ~/.config/conky/obsidian_tasks/scripts/get_obsidian_tasks.py ~/Notes}${color}
 
 ]];
